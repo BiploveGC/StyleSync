@@ -112,13 +112,35 @@ struct ImageSelectionButton: View {
             showImagePicker = true
         }) {
             VStack {
-                Image(systemName: "photo")
+                if title == "Bottom" {
+                    Image("Pants") // Use custom pants image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.black)
+                    
+                } else {
+                    Image(systemName: iconName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.black)
+                }
                 Text(title)
+                    .foregroundColor(.black)
             }
         }
     }
-}
 
+    var iconName: String {
+        switch title {
+        case "Top": return "tshirt"
+        case "Footwear": return "shoe"
+        case "Accessory": return "sunglasses"
+        default: return "photo"
+        }
+    }
+}
 // MARK: - Image Picker Helper for Camera & Photo Library
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
