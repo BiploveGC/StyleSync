@@ -1,10 +1,3 @@
-//
-//  SwiftUIView.swift
-//  StyleSync
-//
-//  Created by csuftitan on 2/4/25.
-//
-
 import SwiftUI
 import UIKit
 
@@ -13,19 +6,21 @@ struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var activeButton: String? // Track which button was clicked
-    
+
     var body: some View {
         ZStack {
-            // Background Image
-            Image("ocean_background") // Replace with your image asset
-                .resizable()
-                .scaledToFill()
-                .edgesIgnoringSafeArea(.all)
-            
+            // Background Image from URL
+            AsyncImage(url: URL(string: "https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")) { image in
+                image.resizable()
+                    .scaledToFill()
+                    .edgesIgnoringSafeArea(.all)
+            } placeholder: {
+                ProgressView()
+            }
+
             VStack {
-                // Top Bar
-                HStack {
-                    Spacer()
+                // Top Bar with Centered "StyleSync" & Properly Positioned Ellipsis Menu
+                ZStack {
                     Text("StyleSync")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -33,46 +28,67 @@ struct ContentView: View {
                         .padding()
                         .background(Color.teal.opacity(0.7))
                         .cornerRadius(15)
-                    Spacer()
+                        .frame(maxWidth: .infinity) // Ensures it stays centered
+
+                    // Right-aligned three-dot menu
+                    HStack {
+                        Spacer() // Pushes ellipsis to the right
+                        Menu {
+                            Button("Height", action: { print("Height selected") })
+                            Button("Weight", action: { print("Weight selected") })
+                            Button("Skin Color", action: { print("Skin Color selected") })
+                            Button("Hair Color", action: { print("Hair Color selected") })
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.title2)
+                                .foregroundColor(.black)
+                                .frame(width: 40) // Fixed size
+                                .padding(.trailing, 20) // Moves it inward properly
+                        }
+                    }
                 }
-                .padding(.horizontal)
-                
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .padding(.horizontal, 20)
+    
                 Spacer()
-                
-                // User Name Badge
-                HStack {
-                    Text("Rabih Zeineddine")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.blue)
-                        .cornerRadius(8)
-                        .padding(.leading, 20)
-                        .offset(y: -30) // Adjust position
-                    Spacer()
-                }
-                
+
                 // Silhouette Placeholder
-                Image("silhouette") // Replace with a transparent silhouette asset
+                Image("silhouette")
                     .resizable()
                     .scaledToFit()
                     .frame(height: 300)
                     .opacity(0.5)
-                
+
                 Spacer()
-                
+
                 // Bottom Bar - 4 Buttons to Open Image Picker
                 HStack {
-                    ImageSelectionButton(title: "Top", activeButton: $activeButton, showImagePicker: $showImagePicker)
-                        .frame(width: 80) // Explicit width
-                    ImageSelectionButton(title: "Bottom", activeButton: $activeButton, showImagePicker: $showImagePicker)
+                    ForEach(["Top", "Bottom", "Footwear", "Accessory"], id: \.self) { title in
+                        Button(action: {
+                            activeButton = title
+                            showImagePicker = true
+                        }) {
+                            VStack {
+                                if UIImage(named: iconName(for: title)) != nil {
+                                    Image(iconName(for: title)) // Use asset image if found
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                        .foregroundColor(.black)
+                                } else {
+                                    Image(systemName: iconName(for: title)) // Use SF Symbol if asset not found
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                        .foregroundColor(.black)
+                                }
+                                Text(title)
+                                    .foregroundColor(.black)
+                            }
+                        }
                         .frame(width: 95)
-                    ImageSelectionButton(title: "Footwear", activeButton: $activeButton, showImagePicker: $showImagePicker)
-                        .frame(width: 95)
-                    ImageSelectionButton(title: "Accessory", activeButton: $activeButton, showImagePicker: $showImagePicker)
-                        .frame(width: 95)
+                    }
                 }
                 .frame(height: 55)
                 .padding(.horizontal, 10)
@@ -81,71 +97,42 @@ struct ContentView: View {
             }
             .padding()
         }
-        // Camera/Gallery Selection Dialog
-        .confirmationDialog("Choose an option for \(activeButton ?? "Item")", isPresented: $showImagePicker, titleVisibility: .visible) {
+        .confirmationDialog(
+            Text("Choose an option for " + (activeButton ?? "Item")),
+            isPresented: $showImagePicker,
+            titleVisibility: .visible
+        ) {
             Button("Camera") {
                 sourceType = .camera
-                showImagePicker = true
+                showImagePicker = false
             }
             Button("Photo Library") {
                 sourceType = .photoLibrary
-                showImagePicker = true
+                showImagePicker = false
             }
             Button("Cancel", role: .cancel) {}
         }
-        // Show Image Picker When Selected
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $selectedImage, sourceType: sourceType)
         }
     }
-}
 
-// MARK: - Button View for Image Selection
-struct ImageSelectionButton: View {
-    var title: String
-    @Binding var activeButton: String?
-    @Binding var showImagePicker: Bool
-    
-    var body: some View {
-        Button(action: {
-            activeButton = title
-            showImagePicker = true
-        }) {
-            VStack {
-                if title == "Bottom" {
-                    Image("Pants") // Use custom pants image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.black)
-                    
-                } else {
-                    Image(systemName: iconName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.black)
-                }
-                Text(title)
-                    .foregroundColor(.black)
-            }
-        }
-    }
-
-    var iconName: String {
+    func iconName(for title: String) -> String {
         switch title {
         case "Top": return "tshirt"
         case "Footwear": return "shoe"
+        case "Bottom": return "Pants"
         case "Accessory": return "sunglasses"
         default: return "photo"
         }
     }
 }
-// MARK: - Image Picker Helper for Camera & Photo Library
+
+// Image Picker Code (Unchanged)
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     var sourceType: UIImagePickerController.SourceType
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
@@ -161,7 +148,7 @@ struct ImagePicker: UIViewControllerRepresentable {
 
     class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         let parent: ImagePicker
-        
+
         init(_ parent: ImagePicker) {
             self.parent = parent
         }
@@ -175,7 +162,6 @@ struct ImagePicker: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
