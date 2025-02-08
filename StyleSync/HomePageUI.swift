@@ -40,10 +40,11 @@ struct ContentView: View {
                             Button("Hair Color", action: { print("Hair Color selected") })
                         } label: {
                             Image(systemName: "ellipsis")
-                                .font(.title2)
+                                .font(.system(size: 50, weight: .bold)) //
+                                .frame(width: 50, height: 50)
                                 .foregroundColor(.black)
                                 .frame(width: 40) // Fixed size
-                                .padding(.trailing, 20) // Moves it inward properly
+                                .padding(.trailing, 50) // Moves it inward properly
                         }
                     }
                 }
