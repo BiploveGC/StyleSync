@@ -1,11 +1,117 @@
 import SwiftUI
+import RealityKit
 import UIKit
 
+// MARK: - RealityKit Avatar View
+struct ReadyPlayerMeView: UIViewRepresentable {
+    @Binding var heightScale: Float
+    @Binding var weightScale: Float
+    @Binding var skinColor: UIColor
+    @Binding var hairColor: UIColor
+    @Binding var activeClothingItem: String?
+
+    func makeUIView(context: Context) -> ARView {
+        let arView = ARView(frame: .zero) // ✅ Initialize ARView
+        return arView
+    }
+
+    func updateUIView(_ uiView: ARView, context: Context) {
+        guard let localURL = Bundle.main.url(forResource: "Girl_in_a_bikini", withExtension: "usdz") else {
+            print("❌ Failed to find Girl_in_a_bikini.usdz in the app bundle.")
+            return
+        }
+
+        Task {
+            do {
+                let modelEntity = try await ModelEntity(contentsOf: localURL)
+
+                // ✅ Shrink model to proper size
+                modelEntity.scale = SIMD3<Float>(self.weightScale * 0.03, self.heightScale * 0.03, self.weightScale * 0.03)
+
+                // ✅ Move model up and back so full body is visible
+                modelEntity.position = SIMD3<Float>(0, -2.0, -2.5)
+
+                // ✅ Ensure lighting works for visibility
+                modelEntity.components[ModelComponent.self]?.materials = [SimpleMaterial(color: .white, isMetallic: false)]
+
+                // ✅ Attach to RealityKit scene
+                let anchor = AnchorEntity(world: [0, -0.8, -2.5])
+                anchor.addChild(modelEntity)
+                uiView.scene.anchors.removeAll()
+                uiView.scene.anchors.append(anchor)
+
+                print("✅ Model loaded successfully and repositioned!")
+
+            } catch {
+                print("❌ Failed to load Girl_in_a_bikini.usdz: \(error.localizedDescription)")
+            }
+        }
+    }
+    // MARK: - Adjust Skin & Hair Colors
+    func applyColorChanges(to model: ModelEntity) {
+        for child in model.children {
+            if let modelComponent = child as? ModelEntity {
+                if let material = modelComponent.model?.materials.first {
+                    
+                    if child.name.lowercased().contains("skin") {
+                        if var simpleMaterial = material as? SimpleMaterial {
+                            simpleMaterial.color = .init(tint: skinColor)
+                            modelComponent.model?.materials = [simpleMaterial]
+                        } else if var pbrMaterial = material as? PhysicallyBasedMaterial {
+                            pbrMaterial.baseColor = .init(tint: skinColor)
+                            modelComponent.model?.materials = [pbrMaterial]
+                        }
+                    }
+                    
+                    if child.name.lowercased().contains("hair") {
+                        if var simpleMaterial = material as? SimpleMaterial {
+                            simpleMaterial.color = .init(tint: hairColor)
+                            modelComponent.model?.materials = [simpleMaterial]
+                        } else if var pbrMaterial = material as? PhysicallyBasedMaterial {
+                            pbrMaterial.baseColor = .init(tint: hairColor)
+                            modelComponent.model?.materials = [pbrMaterial]
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Apply Clothing Selection
+    func applyClothing(to model: ModelEntity) {
+        guard let activeClothingItem = activeClothingItem else { return }
+
+        let clothingFile: String
+        switch activeClothingItem {
+        case "Top": clothingFile = "top.usdz"
+        case "Bottom": clothingFile = "pants.usdz"
+        case "Footwear": clothingFile = "shoes.usdz"
+        case "Accessory": clothingFile = "hat.usdz"
+        default: return
+        }
+
+        Task {
+            do {
+                let clothingEntity = try await ModelEntity(contentsOf: URL(string: clothingFile)!)
+                clothingEntity.position = SIMD3(0, 1.0, 0) // ✅ Adjust position
+                model.addChild(clothingEntity)
+            } catch {
+                print("Failed to load clothing: \(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+// MARK: - Main SwiftUI View
 struct ContentView: View {
+    @State private var heightScale: Float = 1.0  // Default scale (1x)
+    @State private var weightScale: Float = 1.0  // Default weight (1x)
+    @State private var skinColor: UIColor = .systemBrown // Default skin color
+    @State private var hairColor: UIColor = .black // Default hair color
+    @State private var activeClothingItem: String? = nil
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage?
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
-    @State private var activeButton: String? // Track which button was clicked
 
     var body: some View {
         ZStack {
@@ -19,7 +125,7 @@ struct ContentView: View {
             }
 
             VStack {
-                // Top Bar with Centered "StyleSync" & Properly Positioned Ellipsis Menu
+                // Top Bar
                 ZStack {
                     Text("StyleSync")
                         .font(.title2)
@@ -28,11 +134,10 @@ struct ContentView: View {
                         .padding()
                         .background(Color.teal.opacity(0.7))
                         .cornerRadius(15)
-                        .frame(maxWidth: .infinity) // Ensures it stays centered
+                        .frame(maxWidth: .infinity)
 
-                    // Right-aligned three-dot menu
                     HStack {
-                        Spacer() // Pushes ellipsis to the right
+                        Spacer()
                         Menu {
                             Button("Height", action: { print("Height selected") })
                             Button("Weight", action: { print("Weight selected") })
@@ -40,50 +145,39 @@ struct ContentView: View {
                             Button("Hair Color", action: { print("Hair Color selected") })
                         } label: {
                             Image(systemName: "ellipsis")
-                                .font(.system(size: 50, weight: .bold)) //
+                                .font(.system(size: 50, weight: .bold))
                                 .frame(width: 50, height: 50)
                                 .foregroundColor(.black)
-                                .frame(width: 40) // Fixed size
-                                .padding(.trailing, 50) // Moves it inward properly
+                                .frame(width: 40)
+                                .padding(.trailing, 50)
                         }
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
                 .padding(.horizontal, 20)
-    
-                Spacer()
-
-                // Silhouette Placeholder
-                Image("silhouette")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 300)
-                    .opacity(0.5)
 
                 Spacer()
 
-                // Bottom Bar - 4 Buttons to Open Image Picker
+                // RealityKit Avatar in the Middle
+                ReadyPlayerMeView(heightScale: $heightScale, weightScale: $weightScale, skinColor: $skinColor, hairColor: $hairColor, activeClothingItem: $activeClothingItem)
+                    .frame(height: 500)
+
+                Spacer()
+
+                // Bottom Bar with 4 Buttons
                 HStack {
                     ForEach(["Top", "Bottom", "Footwear", "Accessory"], id: \.self) { title in
                         Button(action: {
-                            activeButton = title
+                            activeClothingItem = title
                             showImagePicker = true
                         }) {
                             VStack {
-                                if UIImage(named: iconName(for: title)) != nil {
-                                    Image(iconName(for: title)) // Use asset image if found
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 30, height: 30)
-                                        .foregroundColor(.black)
-                                } else {
-                                    Image(systemName: iconName(for: title)) // Use SF Symbol if asset not found
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 30, height: 30)
-                                        .foregroundColor(.black)
-                                }
+                                Image(systemName: iconName(for: title))
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 30, height: 30)
+                                    .foregroundColor(.black)
                                 Text(title)
                                     .foregroundColor(.black)
                             }
@@ -98,71 +192,20 @@ struct ContentView: View {
             }
             .padding()
         }
-        .confirmationDialog(
-            Text("Choose an option for " + (activeButton ?? "Item")),
-            isPresented: $showImagePicker,
-            titleVisibility: .visible
-        ) {
-            Button("Camera") {
-                sourceType = .camera
-                showImagePicker = false
-            }
-            Button("Photo Library") {
-                sourceType = .photoLibrary
-                showImagePicker = false
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .sheet(isPresented: $showImagePicker) {
-            ImagePicker(image: $selectedImage, sourceType: sourceType)
-        }
     }
 
     func iconName(for title: String) -> String {
         switch title {
         case "Top": return "tshirt"
         case "Footwear": return "shoe"
-        case "Bottom": return "Pants"
+        case "Bottom": return "pants"
         case "Accessory": return "sunglasses"
         default: return "photo"
         }
     }
 }
 
-// Image Picker Code (Unchanged)
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
-    var sourceType: UIImagePickerController.SourceType
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = sourceType
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let parent: ImagePicker
-
-        init(_ parent: ImagePicker) {
-            self.parent = parent
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let uiImage = info[.originalImage] as? UIImage {
-                parent.image = uiImage
-            }
-            picker.dismiss(animated: true)
-        }
-    }
-}
-
+// MARK: - Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
