@@ -173,7 +173,7 @@ struct ContentView: View {
                             showImagePicker = true
                         }) {
                             VStack {
-                                Image(systemName: iconName(for: title))
+                                iconImage(for: title)
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 30, height: 30)
@@ -192,15 +192,37 @@ struct ContentView: View {
             }
             .padding()
         }
+        .actionSheet(isPresented: $showImagePicker) {
+            ActionSheet(title: Text("Choose Image Source"), buttons: [
+                .default(Text("Take a Photo")) {
+                    sourceType = .camera
+                    showImagePicker = true
+                },
+                .default(Text("Choose from Library")) {
+                    sourceType = .photoLibrary
+                    showImagePicker = true
+                },
+                .cancel()
+            ])
+        }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
+        }
     }
-
-    func iconName(for title: String) -> String {
+    
+    // MARK: - Icon Selector
+    func iconImage(for title: String) -> Image {
         switch title {
-        case "Top": return "tshirt"
-        case "Footwear": return "shoe"
-        case "Bottom": return "pants"
-        case "Accessory": return "sunglasses"
-        default: return "photo"
+        case "Top":
+            return Image(systemName: "tshirt")
+        case "Bottom":
+            return Image("Pants") // Uses the custom asset from your Assets catalog
+        case "Footwear":
+            return Image(systemName: "shoe")
+        case "Accessory":
+            return Image(systemName: "sunglasses")
+        default:
+            return Image(systemName: "photo")
         }
     }
 }
