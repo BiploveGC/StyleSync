@@ -4,10 +4,17 @@
 //
 //  Created by Biplove on 2/2/25.
 //
-
+import SwiftUI
 import UIKit
 
 @main
+struct StyleSync: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView() // ✅ Make sure this is correct
+        }
+    }
+}
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
