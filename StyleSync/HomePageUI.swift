@@ -1,6 +1,6 @@
 import SwiftUI
 import RealityKit
-import UIKit
+import UIKit 
 
 // MARK: - RealityKit Avatar View
 struct ReadyPlayerMeView: UIViewRepresentable {
@@ -64,30 +64,30 @@ struct ReadyPlayerMeView: UIViewRepresentable {
     }
 
     // MARK: - Apply Clothing Selection with Image
-    func applyClothing(to model: ModelEntity) {
-        guard let activeClothingItem = activeClothingItem, let cgImage = selectedClothingImage?.cgImage else { return }
+        func applyClothing(to model: ModelEntity) {
+            guard let cgImage = selectedClothingImage?.cgImage else { return }
 
-        guard let texture = try? TextureResource(image: cgImage, withName: "ClothingTexture", options: .init(semantic: .color)) else {
-            print("❌ Failed to create texture")
-            return
-        }
+            guard let texture = try? TextureResource(image: cgImage, withName: "ClothingTexture", options: .init(semantic: .color)) else {
+                print("❌ Failed to create texture")
+                return
+            }
 
-        var material = UnlitMaterial()
-        material.baseColor = .texture(texture)
+            var material = UnlitMaterial()
+            material.baseColor = .texture(texture)
 
-        Task {
-            do {
-                let clothingEntity = try await ModelEntity(contentsOf: Bundle.main.url(forResource: "basic_clothing", withExtension: "usdz")!)
-                clothingEntity.model?.materials = [material]
-                clothingEntity.position = SIMD3(0, 1.0, 0)
-                model.addChild(clothingEntity)
-                print("✅ Applied custom clothing texture!")
-            } catch {
-                print("❌ Failed to apply clothing texture: \(error.localizedDescription)")
+            Task {
+                do {
+                    let clothingEntity = try await ModelEntity(contentsOf: Bundle.main.url(forResource: "basic_clothing", withExtension: "usdz")!)
+                    clothingEntity.model?.materials = [material]
+                    clothingEntity.position = SIMD3(0, 1.0, 0)
+                    model.addChild(clothingEntity)
+                    print("✅ Applied custom clothing texture!")
+                } catch {
+                    print("❌ Failed to apply clothing texture: \(error.localizedDescription)")
+                }
             }
         }
     }
-}
 
 // MARK: - SwiftUI ContentView
 struct ContentView: View {
@@ -97,7 +97,8 @@ struct ContentView: View {
     @State private var hairColor: UIColor = .black
     @State private var activeClothingItem: String?
     @State private var selectedImage: UIImage?
-    @State private var showImagePicker = false
+    @State private var showActionSheet = false
+    @State private var showPickerSheet = false
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
 
     var body: some View {
@@ -156,66 +157,66 @@ struct ContentView: View {
                     activeClothingItem: $activeClothingItem,
                     selectedClothingImage: $selectedImage
                 )
-                .frame(height: 500)
+                .frame(height: 500) 
 
                 Spacer()
 
                 // ✅ Clothing Selection Buttons
                 HStack {
-                    ForEach(["Top", "Bottom", "Footwear", "Accessory"], id: \.self) { title in
-                        Button(action: {
-                            activeClothingItem = title
-                            showImagePicker = true
-                        }) {
-                            VStack {
-                                Image(systemName: iconName(for: title))
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 30, height: 30)
-                                    .foregroundColor(.black)
-                                Text(title)
-                                    .foregroundColor(.black)
+                                    ForEach(["Top", "Bottom", "Footwear", "Accessory"], id: \.self) { title in
+                                        Button(action: {
+                                            activeClothingItem = title
+                                            showActionSheet = true // Trigger action sheet
+                                        }) {
+                                            VStack {
+                                                Image(systemName: iconName(for: title))
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 30, height: 30)
+                                                    .foregroundColor(.black)
+                                                Text(title)
+                                                    .foregroundColor(.black)
+                                            }
+                                        }
+                                        .frame(width: 95)
+                                    }
+                                }
+                                .frame(height: 55)
+                                .padding(.horizontal, 10)
+                                .background(Color.teal)
+                                .cornerRadius(15)
                             }
+                            .padding()
                         }
-                        .frame(width: 95)
+                        .actionSheet(isPresented: $showActionSheet) {
+                            ActionSheet(title: Text("Choose Image Source"), buttons: [
+                                .default(Text("Take a Photo")) {
+                                    sourceType = .camera
+                                    showPickerSheet = true // Trigger Image Picker
+                                },
+                                .default(Text("Choose from Library")) {
+                                    sourceType = .photoLibrary
+                                    showPickerSheet = true // Trigger Image Picker
+                                },
+                                .cancel()
+                            ])
+                        }
+                        .sheet(isPresented: $showPickerSheet) {
+                            ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
+                        }
+                    }
+
+                    // MARK: - Icon Selector
+                    func iconName(for title: String) -> String {
+                        switch title {
+                        case "Top": return "tshirt"
+                        case "Bottom": return "pants"
+                        case "Footwear": return "shoe"
+                        case "Accessory": return "sunglasses"
+                        default: return "photo"
+                        }
                     }
                 }
-                .frame(height: 55)
-                .padding(.horizontal, 10)
-                .background(Color.teal)
-                .cornerRadius(15)
-            }
-            .padding()
-        }
-        .actionSheet(isPresented: $showImagePicker) {
-            ActionSheet(title: Text("Choose Image Source"), buttons: [
-                .default(Text("Take a Photo")) {
-                    sourceType = .camera
-                    showImagePicker = true
-                },
-                .default(Text("Choose from Library")) {
-                    sourceType = .photoLibrary
-                    showImagePicker = true
-                },
-                .cancel()
-            ])
-        }
-        .sheet(isPresented: $showImagePicker) {
-            ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
-        }
-    }
-
-    // MARK: - Icon Selector
-    func iconName(for title: String) -> String {
-        switch title {
-        case "Top": return "tshirt"
-        case "Bottom": return "pants"
-        case "Footwear": return "shoe"
-        case "Accessory": return "sunglasses"
-        default: return "photo"
-        }
-    }
-}
 
 // MARK: - Image Picker for Camera and Library
 struct ImagePicker: UIViewControllerRepresentable {
