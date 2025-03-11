@@ -26,8 +26,8 @@ struct ReadyPlayerMeView: UIViewRepresentable {
         Task {
             do {
                 let modelEntity = try await ModelEntity(contentsOf: localURL)
-                modelEntity.scale = SIMD3(weightScale * 0.03, heightScale * 0.03, weightScale * 0.03)
-                modelEntity.position = SIMD3(0, -2.0, -2.5)
+                modelEntity.scale = SIMD3(weightScale * 0.035, heightScale * 0.035, weightScale * 0.035)
+                modelEntity.position = SIMD3(0, -4.5, -4.5)
 
                 let anchor = AnchorEntity(world: [0, -0.8, -2.5])
                 anchor.addChild(modelEntity)
@@ -121,8 +121,31 @@ struct ContentView: View {
                     .background(Color.teal.opacity(0.7))
                     .cornerRadius(15)
                     .frame(maxWidth: .infinity)
+                
+                HStack{
+                    Spacer()
+                    Menu{
+                        Button("Height", action: { print("Height selected")})
+                        Button("Weight", action: { print("Weight selected") })
+                        Button("Skin Color", action: { print("Skin Color selected") })
+                        Button("Hair Color", action: { print("Hair Color selected") })
+                    }label: {
+                        Image(systemName:"ellipsis")
+                            .font(.system(size: 50, weight: .bold))
+                            .frame(width: 50, height: 50)
+                            .foregroundColor(.black)
+                            .frame(width: 40)
+                            .padding(.trailing, 50)
+                    }
+                }
+                
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .padding(.horizontal, 20)
 
-                Spacer()
+                
+                
+                
 
                 // ✅ Avatar View
                 ReadyPlayerMeView(
