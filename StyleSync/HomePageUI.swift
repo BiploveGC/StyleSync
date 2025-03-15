@@ -10,6 +10,8 @@ struct ReadyPlayerMeView: UIViewRepresentable {
     @Binding var hairColor: UIColor
     @Binding var activeClothingItem: String?
     @Binding var selectedClothingImage: UIImage?
+    
+    
 
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
@@ -26,10 +28,10 @@ struct ReadyPlayerMeView: UIViewRepresentable {
         Task {
             do {
                 let modelEntity = try await ModelEntity(contentsOf: localURL)
-                modelEntity.scale = SIMD3(weightScale * 0.035, heightScale * 0.035, weightScale * 0.035)
-                modelEntity.position = SIMD3(0, -4.5, -4.5)
+                modelEntity.scale = SIMD3(weightScale * 0.030, heightScale * 0.030, weightScale * 0.030)
+                modelEntity.position = SIMD3(0, -4.4, -11.0)
 
-                let anchor = AnchorEntity(world: [0, -0.8, -2.5])
+                let anchor = AnchorEntity(.camera)
                 anchor.addChild(modelEntity)
                 uiView.scene.anchors.removeAll()
                 uiView.scene.anchors.append(anchor)
@@ -157,7 +159,7 @@ struct ContentView: View {
                     activeClothingItem: $activeClothingItem,
                     selectedClothingImage: $selectedImage
                 )
-                .frame(height: 500) 
+                .frame(height: 500)
 
                 Spacer()
 
@@ -168,20 +170,28 @@ struct ContentView: View {
                                             activeClothingItem = title
                                             showActionSheet = true // Trigger action sheet
                                         }) {
-                                            VStack {
-                                                Image(systemName: iconName(for: title))
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 30, height: 30)
-                                                    .foregroundColor(.black)
+                                            VStack (spacing: 4){
+                                                if title == "Bottom" {
+                                                    Image("Pants")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 30, height: 30)
+                                                } else {
+                                                    Image(systemName: iconName(for: title))
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 30, height: 30)
+                                                        .foregroundColor(.black)
+                                                }
                                                 Text(title)
                                                     .foregroundColor(.black)
+                                                    .font(.caption)
                                             }
+                                            .frame(width: 80)
                                         }
-                                        .frame(width: 95)
                                     }
                                 }
-                                .frame(height: 55)
+                                .frame(height: 75)
                                 .padding(.horizontal, 10)
                                 .background(Color.teal)
                                 .cornerRadius(15)
