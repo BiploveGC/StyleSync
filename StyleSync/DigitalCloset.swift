@@ -1,4 +1,4 @@
-//DigitalCloset
+/DigitalCloset
 import SwiftUI
 import SceneKit
 
@@ -114,8 +114,6 @@ enum ClothingItem: Identifiable {
 // MARK: - Full-Screen View
 struct FullScreenItemView: View {
     let item: ClothingItem
-    var onTryOn: (String, UIImage?) -> Void
-    
     @Environment(\.dismiss) var dismiss
     @State private var offset = CGSize.zero
     
@@ -162,8 +160,6 @@ struct FullScreenItemView: View {
                     .font(.title2)
                     .foregroundColor(.white)
                     .padding(.top, 10)
-                
-                // Try on button
                 
                 Spacer()
             }
@@ -266,5 +262,3 @@ struct ClosetView_Previews: PreviewProvider {
         ClosetView()
     }
 }
-
-
