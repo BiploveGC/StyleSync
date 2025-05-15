@@ -72,6 +72,12 @@ To run the StyleSync app on your iPhone:
 ![image](https://github.com/user-attachments/assets/09d505af-dafc-4b0e-a5d0-44471202deb9)
 ![image](https://github.com/user-attachments/assets/055f902c-ebc1-4e9a-86fd-f03cf28398fd)
 ![image](https://github.com/user-attachments/assets/93d36c1a-cb39-47fb-b7ca-9bf8ea9e4510)
+![image](https://github.com/user-attachments/assets/7b61814b-bb35-472a-b3fc-d98a9c086f04)
+![image](https://github.com/user-attachments/assets/12c37f4f-749f-458d-92db-cf907a01729d)
+![image](https://github.com/user-attachments/assets/f9f15d5a-7baf-41a4-9d31-7afb363a9e34)
+
+
+
 
 
 
