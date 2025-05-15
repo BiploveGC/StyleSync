@@ -1,57 +1,61 @@
-/DigitalCloset
+// DigitalCloset.swift (Try-On from Fullscreen View)
 import SwiftUI
 import SceneKit
 
 struct ClosetView: View {
-    @Environment(\.presentationMode) var presentationMode // Allows navigation back
+    @Environment(\.presentationMode) var presentationMode
+    @Binding var activeClothingItem: String?
+
     let columns = [
         GridItem(.flexible()),
         GridItem(.flexible()),
         GridItem(.flexible())
     ]
-    
+
     @State private var selectedItem: ClothingItem? = nil
     @State private var clothes: [ClothingItem] = [
         .usdz(name: "Blue Shirt", filename: "blueshirt"),
         .usdz(name: "Denim Pants", filename: "pantsdenim"),
         .usdz(name: "Casual Shirt", filename: "shirt1"),
         .usdz(name: "Teal Shirt", filename: "tealshirt"),
-        .usdz(name: "Tommy Hilfiger Jacket", filename: "Tommy_Hilfiger_Jacket")
+        .usdz(name: "Tommy Hilfiger Jacket", filename: "Tommy_Hilfiger_Jacket"),
+        .usdz(name: "Blue Dress", filename: "bluedress1"),   // NEW
+        .usdz(name: "Long Dress", filename: "dress2")        // NEW
     ]
-    
+
     var body: some View {
         NavigationStack {
             VStack {
                 HStack {
                     Button(action: {
-                        presentationMode.wrappedValue.dismiss() // Go back to HomePageUI
+                        presentationMode.wrappedValue.dismiss()
                     }) {
                         Image(systemName: "chevron.left")
                             .font(.title)
                             .foregroundColor(.blue)
                     }
                     .padding()
-                    
+
                     Spacer()
-                    
+
                     Text("StyleSync")
                         .font(.title)
                         .fontWeight(.bold)
-                    
+
                     Spacer()
-                    
-                    Spacer().frame(width: 40) // Keeps the title centered
+
+                    Spacer().frame(width: 40)
                 }
-                
+
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(clothes, id: \.id) { item in
-                            VStack {
+                            VStack(spacing: 8) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 10)
                                         .stroke(Color.black, lineWidth: 1)
                                         .frame(height: 100)
-                                    
+
                                     item.view
                                 }
                                 .onTapGesture {
@@ -59,7 +63,7 @@ struct ClosetView: View {
                                         selectedItem = item
                                     }
                                 }
-                                
+
                                 Text(item.name)
                                     .font(.caption)
                                     .foregroundColor(.gray)
@@ -79,9 +83,12 @@ struct ClosetView: View {
                 }
             }
             .fullScreenCover(item: $selectedItem) { item in
-                FullScreenItemView(item: item)
+                FullScreenItemView(item: item, tryOn: {
+                    activeClothingItem = item.id
+                    presentationMode.wrappedValue.dismiss()
+                })
             }
-            .navigationBarBackButtonHidden(true) // Hides default back button
+            .navigationBarBackButtonHidden(true)
         }
     }
 }
@@ -89,19 +96,19 @@ struct ClosetView: View {
 // MARK: - Clothing Item Enum
 enum ClothingItem: Identifiable {
     case usdz(name: String, filename: String)
-    
+
     var id: String {
         switch self {
         case .usdz(_, let filename): return filename
         }
     }
-    
+
     var name: String {
         switch self {
         case .usdz(let name, _): return name
         }
     }
-    
+
     @ViewBuilder var view: some View {
         switch self {
         case .usdz(_, let filename):
@@ -114,27 +121,17 @@ enum ClothingItem: Identifiable {
 // MARK: - Full-Screen View
 struct FullScreenItemView: View {
     let item: ClothingItem
+    let tryOn: () -> Void
     @Environment(\.dismiss) var dismiss
     @State private var offset = CGSize.zero
-    
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topTrailing) {
             Color.black.opacity(0.9).edgesIgnoringSafeArea(.all)
-            
+
             VStack {
-                HStack{
-                    Spacer()
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .padding(16)
-                    }
-                }
                 Spacer()
-                
+
                 if case .usdz(_, let filename) = item {
                     ZoomableSceneKitView(usdzFileName: filename)
                         .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.8)
@@ -155,13 +152,35 @@ struct FullScreenItemView: View {
                                 }
                         )
                 }
-                
+
                 Text(item.name)
                     .font(.title2)
                     .foregroundColor(.white)
                     .padding(.top, 10)
-                
+
+                Button(action: {
+                    tryOn()
+                }) {
+                    Text("Try On")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                }
+                .padding(.top, 10)
+
                 Spacer()
+            }
+
+            Button(action: {
+                dismiss()
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(.white.opacity(0.8))
+                    .padding(16)
             }
         }
     }
@@ -217,11 +236,8 @@ struct ZoomableSceneKitView: UIViewRepresentable {
             print("❌ Error loading 3D model: \(error.localizedDescription)")
         }
 
-        let pinchGesture = UIPinchGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePinch(_:)))
-        let rotationGesture = UIRotationGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleRotation(_:)))
-        
-        sceneView.addGestureRecognizer(pinchGesture)
-        sceneView.addGestureRecognizer(rotationGesture)
+        sceneView.addGestureRecognizer(UIPinchGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handlePinch(_:))))
+        sceneView.addGestureRecognizer(UIRotationGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleRotation(_:))))
 
         return sceneView
     }
@@ -229,7 +245,7 @@ struct ZoomableSceneKitView: UIViewRepresentable {
     func updateUIView(_ uiView: SCNView, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        return Coordinator()
+        Coordinator()
     }
 
     class Coordinator: NSObject {
@@ -258,7 +274,10 @@ struct ZoomableSceneKitView: UIViewRepresentable {
 
 // MARK: - Preview
 struct ClosetView_Previews: PreviewProvider {
+    @State static var item: String? = nil
+
     static var previews: some View {
-        ClosetView()
+        ClosetView(activeClothingItem: $item)
     }
 }
+
