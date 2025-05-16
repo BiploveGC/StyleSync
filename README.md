@@ -64,6 +64,8 @@ To run the StyleSync app on your iPhone:
 7. **Launch StyleSync**
    - Find the StyleSync app icon on your iPhone.
    - Tap to launch and grant any camera or RealityKit permissions when prompted.
+  
+
 
 ##Screenshots
 ![image](https://github.com/user-attachments/assets/852640d9-88ea-41f6-a51e-3b89ca147afa)
