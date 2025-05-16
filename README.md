@@ -7,7 +7,7 @@
 - Switch between multiple avatars
 - Adjust avatar height and weight in real-time
 - Add clothing items with texture support
-- Proper clothing by adjust scale, tilt, X offset, Y offset and Z offeset 
+- Clothes fitting by adjusting scale, tilt, X offset, Y offset and Z offeset 
 - Use gestures to rotate, scale, and drag models
 
 ## Requirements
