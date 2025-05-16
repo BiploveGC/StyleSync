@@ -2,21 +2,21 @@
 
 ** StyleSync is an ioS app designed to help users visualize how clothing items will look on their body shape and type, eliminating the time and uncertainty spent trying on outfits. The app will allow users to experiment with different clothing combinations and instantly see how they would look in specific outfits. 
 
-#### 🚀 Features
+####  Features
 
-- 🔁 Switch between multiple avatars
-- 🧍 Adjust avatar height and weight in real-time
-- 🧢 Add clothing items with texture support
-- 🎚️ Proper clothing by adjust scale, tilt, X offset, Y offset and Z offeset 
+- Switch between multiple avatars
+- Adjust avatar height and weight in real-time
+- Add clothing items with texture support
+- Proper clothing by adjust scale, tilt, X offset, Y offset and Z offeset 
 - 🖐️ Use gestures to rotate, scale, and drag models
 
-## 🧰 Requirements
+## Requirements
 
 - Xcode 14+
 - iOS 15+
 - iPhone 12 or newer
 
-## 🔧 Setup Instructions
+##  Setup Instructions
 
 1. **Clone the repo**
    ```bash
@@ -25,9 +25,9 @@
 2. **Build and Run**
    - Open `StyleSync.xcodeproj`
    - Select an ioS device that is connected to your MAC computer
-   - Hit ▶️ Run
+   - Hit  Run
 
-## 📱 Running on iPhone
+## Running on iPhone
 
 To run the StyleSync app on your iPhone:
 
